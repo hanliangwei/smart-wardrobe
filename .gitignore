@@ -1,3 +1,6 @@
 __pycache__/
-./server/uploads
-./server/wardrobe.db
+server/uploads/
+server/wardrobe.db
+server/cert.pem
+server/key.pem
+server/deleted/
