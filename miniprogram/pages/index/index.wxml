@@ -1,0 +1,82 @@
+<view class="page-container">
+  <!-- 柜子网格 -->
+  <view class="cabinet-grid" wx:if="{{cabinets.length > 0}}">
+    <view
+      class="cabinet-card card anim-in"
+      wx:for="{{cabinets}}"
+      wx:key="id"
+      style="animation-delay: {{index * 0.06}}s"
+      data-id="{{item.id}}"
+      data-name="{{item.name}}"
+      data-icon="{{item.icon}}"
+      bindtap="onCabinetTap"
+      bindlongpress="onCabinetLongPress"
+    >
+      <text class="cabinet-icon">{{item.icon}}</text>
+      <text class="cabinet-name">{{item.name}}</text>
+      <view class="cabinet-meta">
+        <text wx:if="{{item.sub_cabinets > 0}}">📁{{item.sub_cabinets}}</text>
+        <text wx:if="{{item.clothes > 0}}">👕{{item.clothes}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && cabinets.length === 0}}">
+    <text class="emoji">🗄️</text>
+    <text class="hint">还没有柜子，点击下方按钮创建</text>
+  </view>
+
+  <!-- FAB 新建柜子 -->
+  <view class="fab" bindtap="showAdd">
+    <text class="fab-icon">+</text>
+  </view>
+
+  <!-- 重命名柜子弹窗 -->
+  <view class="modal-mask" wx:if="{{showRenameModal}}" bindtap="hideRename">
+    <view class="modal" catchtap="stopPropagation">
+      <text class="modal-title">重命名柜子</text>
+      <input class="modal-input" placeholder="柜子名称" value="{{renameCabinetName}}" bindinput="onRenameInput" focus="{{showRenameModal}}" />
+      <view class="icon-picker">
+        <text class="picker-label">选择图标</text>
+        <view class="icon-list">
+          <text
+            class="icon-option {{renameCabinetIcon === item ? 'active' : ''}}"
+            wx:for="{{iconOptions}}"
+            wx:key="*this"
+            data-icon="{{item}}"
+            bindtap="onRenameIconSelect"
+          >{{item}}</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="hideRename">取消</button>
+        <button class="btn-primary" bindtap="onConfirmRename">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新建柜子弹窗 -->
+  <view class="modal-mask" wx:if="{{showAddModal}}" bindtap="hideAdd">
+    <view class="modal" catchtap="stopPropagation">
+      <text class="modal-title">新建柜子</text>
+      <input class="modal-input" placeholder="柜子名称" value="{{newCabinetName}}" bindinput="onNameInput" focus="{{showAddModal}}" />
+      <view class="icon-picker">
+        <text class="picker-label">选择图标</text>
+        <view class="icon-list">
+          <text
+            class="icon-option {{newCabinetIcon === item ? 'active' : ''}}"
+            wx:for="{{iconOptions}}"
+            wx:key="*this"
+            data-icon="{{item}}"
+            bindtap="onIconSelect"
+          >{{item}}</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="hideAdd">取消</button>
+        <button class="btn-primary" bindtap="onConfirmAdd">创建</button>
+      </view>
+    </view>
+  </view>
+</view>

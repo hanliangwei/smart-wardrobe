@@ -1,0 +1,118 @@
+<view class="page-container">
+  <!-- 面包屑导航 -->
+  <view class="breadcrumbs anim-in" wx:if="{{breadcrumbs.length > 0}}">
+    <text class="crumb" bindtap="onBreadcrumbTap" data-idx="0">🏠</text>
+    <block wx:for="{{breadcrumbs}}" wx:key="id">
+      <text class="crumb-sep">›</text>
+      <text class="crumb {{index === breadcrumbs.length - 1 ? 'current' : ''}}">{{item.name}}</text>
+    </block>
+  </view>
+
+  <!-- 子柜子 -->
+  <view class="section" wx:if="{{subCabinets.length > 0}}">
+    <text class="section-title">📁 子柜子</text>
+    <view class="cabinet-grid">
+      <view
+        class="sub-cabinet card anim-in"
+        wx:for="{{subCabinets}}"
+        wx:key="id"
+        style="animation-delay: {{index * 0.05}}s"
+        data-id="{{item.id}}"
+        data-name="{{item.name}}"
+        bindtap="onSubCabinetTap"
+        bindlongpress="onSubCabinetLongPress"
+      >
+        <text class="sub-icon">{{item.icon}}</text>
+        <text class="sub-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 衣物列表 -->
+  <view class="section">
+    <text class="section-title">👕 衣物 ({{clothes.length}})</text>
+    <view class="clothes-grid" wx:if="{{clothes.length > 0}}">
+      <view
+        class="clothing-card anim-in"
+        wx:for="{{clothes}}"
+        wx:key="id"
+        style="animation-delay: {{index * 0.05}}s"
+        data-id="{{item.id}}"
+        data-url="{{item.imageUrl}}"
+        bindtap="onClothingTap"
+        bindlongpress="onClothingLongPress"
+      >
+        <image class="clothing-img" src="{{item.imageUrl}}" mode="aspectFill" binderror="onImageError" />
+        <view class="clothing-tags">
+          <text class="clothing-tag" wx:if="{{item.season && item.season !== '四季'}}">{{item.season}}</text>
+          <text class="clothing-tag" wx:if="{{item.gender && item.gender !== '通用'}}">{{item.gender}}</text>
+        </view>
+        <text class="clothing-desc" wx:if="{{item.description}}">{{item.description}}</text>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{!loading && clothes.length === 0 && subCabinets.length === 0}}">
+      <text class="emoji">👕</text>
+      <text class="hint">这里还是空的，添加一些衣物吧</text>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bar-btn" bindtap="goAddClothing">
+      <text class="bar-icon">📷</text>
+      <text>添加衣物</text>
+    </view>
+    <view class="bar-btn" bindtap="showAddCabinetModal">
+      <text class="bar-icon">📁</text>
+      <text>新建子柜</text>
+    </view>
+  </view>
+
+  <!-- 重命名子柜子弹窗 -->
+  <view class="modal-mask" wx:if="{{showRenameCabinet}}" bindtap="hideRenameCabinet">
+    <view class="modal card" catchtap="stopPropagation">
+      <text class="modal-title">重命名柜子</text>
+      <input class="modal-input" placeholder="柜子名称" value="{{renameCabinetName}}" bindinput="onRenameCabinetInput" focus="{{showRenameCabinet}}" />
+      <view class="icon-picker">
+        <text class="picker-label">选择图标</text>
+        <view class="icon-list">
+          <text
+            class="icon-option {{renameCabinetIcon === item ? 'active' : ''}}"
+            wx:for="{{iconOptions}}"
+            wx:key="*this"
+            data-icon="{{item}}"
+            bindtap="onRenameCabinetIconSelect"
+          >{{item}}</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="hideRenameCabinet">取消</button>
+        <button class="btn-primary" bindtap="onConfirmRenameCabinet">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新建子柜子弹窗 (同首页) -->
+  <view class="modal-mask" wx:if="{{showAddCabinet}}" bindtap="hideAddCabinet">
+    <view class="modal card" catchtap="stopPropagation">
+      <text class="modal-title">新建子柜子</text>
+      <input class="modal-input" placeholder="柜子名称" value="{{newCabinetName}}" bindinput="onCabinetNameInput" focus="{{showAddCabinet}}" />
+      <view class="icon-picker">
+        <text class="picker-label">选择图标</text>
+        <view class="icon-list">
+          <text
+            class="icon-option {{newCabinetIcon === item ? 'active' : ''}}"
+            wx:for="{{iconOptions}}"
+            wx:key="*this"
+            data-icon="{{item}}"
+            bindtap="onIconSelect"
+          >{{item}}</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="hideAddCabinet">取消</button>
+        <button class="btn-primary" bindtap="onConfirmAddCabinet">创建</button>
+      </view>
+    </view>
+  </view>
+</view>

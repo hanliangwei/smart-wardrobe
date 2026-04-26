@@ -1,0 +1,154 @@
+/* 面包屑 */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12rpx 0 24rpx;
+  gap: 8rpx;
+}
+.crumb {
+  font-size: 26rpx;
+  color: var(--accent);
+}
+.crumb.current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.crumb-sep {
+  color: var(--text-muted);
+  font-size: 26rpx;
+}
+
+.section {
+  margin-bottom: 28rpx;
+}
+
+/* 子柜子 */
+.cabinet-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14rpx;
+}
+.sub-cabinet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 8rpx;
+}
+.sub-cabinet:active { transform: scale(0.95); }
+.sub-icon { font-size: 44rpx; margin-bottom: 6rpx; }
+.sub-name {
+  font-size: 24rpx;
+  color: var(--text-primary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* 衣物网格 */
+.clothes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+.clothing-card {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--border);
+}
+.clothing-card:active { transform: scale(0.97); }
+.clothing-img {
+  width: 100%;
+  height: 100%;
+}
+.clothing-desc {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8rpx 12rpx;
+  font-size: 20rpx;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,0.55));
+}
+.clothing-tags {
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;
+  display: flex;
+  gap: 6rpx;
+}
+.clothing-tag {
+  font-size: 18rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  background: rgba(255,255,255,0.85);
+  color: var(--text-secondary);
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 48rpx;
+  display: flex;
+  border-radius: 28rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4rpx 32rpx rgba(0,0,0,0.1);
+}
+.bar-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  transition: background 0.15s;
+}
+.bar-btn:active {
+  background: var(--accent-light);
+}
+.bar-icon {
+  font-size: 36rpx;
+  margin-bottom: 4rpx;
+}
+
+/* ---- 弹窗 ---- */
+.modal-mask {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+}
+.modal {
+  width: 620rpx; padding: 44rpx;
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow-lg);
+}
+.modal-title { display: block; font-size: 34rpx; font-weight: 700; text-align: center; margin-bottom: 32rpx; }
+.modal-input {
+  width: 100%; height: 84rpx;
+  background: var(--bg-primary); border: 2rpx solid var(--border);
+  border-radius: var(--radius-sm); padding: 0 24rpx;
+  color: var(--text-primary); font-size: 30rpx; box-sizing: border-box;
+}
+.icon-picker { margin-top: 24rpx; }
+.picker-label { font-size: 24rpx; color: var(--text-secondary); margin-bottom: 14rpx; display: block; }
+.icon-list { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.icon-option {
+  width: 72rpx; height: 72rpx; display: flex; align-items: center; justify-content: center;
+  font-size: 36rpx; border-radius: 16rpx; background: var(--bg-primary);
+  border: 2rpx solid var(--border);
+}
+.icon-option.active { border-color: var(--accent); background: var(--accent-light); }
+.modal-actions { display: flex; gap: 20rpx; margin-top: 36rpx; }
+.modal-actions .btn-secondary, .modal-actions .btn-primary { flex: 1; }

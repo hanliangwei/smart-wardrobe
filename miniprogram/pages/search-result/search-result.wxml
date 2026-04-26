@@ -1,0 +1,48 @@
+<view class="page-container">
+  <view class="header anim-in">
+    <text class="query-label" wx:if="{{mode === 'text'}}">搜索：{{query}}</text>
+    <text class="query-label" wx:else>筛选：{{query}}</text>
+    <text class="result-count">找到 {{results.length}} 件{{mode === 'text' ? '相似' : ''}}衣物</text>
+  </view>
+
+  <view class="result-list" wx:if="{{results.length > 0}}">
+    <view
+      class="result-card card anim-in"
+      wx:for="{{results}}"
+      wx:key="id"
+      style="animation-delay: {{index * 0.05}}s"
+      data-cabinet-id="{{item.cabinet_id}}"
+      data-cabinet-path="{{item.cabinet_path}}"
+      bindtap="onResultTap"
+    >
+      <image
+        class="result-img"
+        src="{{item.imageUrl}}"
+        mode="aspectFill"
+        data-url="{{item.imageUrl}}"
+        catchtap="onImagePreview"
+        binderror="onImageError"
+      />
+      <view class="result-info">
+        <view class="score-row" wx:if="{{mode === 'text'}}">
+          <view class="score-bar-bg">
+            <view class="score-bar" style="width: {{item.scorePercent}}%"></view>
+          </view>
+          <text class="score-text">{{item.scorePercent}}%</text>
+        </view>
+        <text class="result-path">📍 {{item.cabinet_path}}</text>
+        <view class="result-tags" wx:if="{{item.season || item.gender}}">
+          <text class="result-tag" wx:if="{{item.season}}">{{item.season}}</text>
+          <text class="result-tag" wx:if="{{item.gender}}">{{item.gender}}</text>
+        </view>
+        <text class="result-desc" wx:if="{{item.description}}">{{item.description}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{loaded && results.length === 0}}">
+    <text class="emoji">🤷</text>
+    <text class="hint">没有找到匹配的衣物</text>
+    <text class="hint" style="margin-top: 8rpx;">试试换个描述或调整筛选条件</text>
+  </view>
+</view>

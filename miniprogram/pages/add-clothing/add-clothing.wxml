@@ -1,0 +1,90 @@
+<view class="page-container">
+  <text class="page-title anim-in">添加衣物</text>
+
+  <!-- 图片区域 -->
+  <view class="photo-area card anim-in" bindtap="chooseImage" style="animation-delay: 0.05s">
+    <block wx:if="{{imagePath}}">
+      <image class="preview-img" src="{{imagePath}}" mode="aspectFit" />
+      <text class="retake-hint">点击重新拍照</text>
+    </block>
+    <view class="photo-placeholder" wx:else>
+      <text class="camera-icon">📷</text>
+      <text class="camera-hint">拍照 / 从相册选择</text>
+    </view>
+  </view>
+
+  <!-- 季节选择 -->
+  <view class="field anim-in" style="animation-delay: 0.08s">
+    <text class="field-label">季节</text>
+    <view class="filter-chips">
+      <text
+        class="chip {{season === item ? 'active' : ''}}"
+        wx:for="{{seasonOptions}}"
+        wx:key="*this"
+        data-value="{{item}}"
+        bindtap="onSeasonTap"
+      >{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 性别选择 -->
+  <view class="field anim-in" style="animation-delay: 0.11s">
+    <text class="field-label">分类</text>
+    <view class="filter-chips">
+      <text
+        class="chip {{gender === item ? 'active' : ''}}"
+        wx:for="{{genderOptions}}"
+        wx:key="*this"
+        data-value="{{item}}"
+        bindtap="onGenderTap"
+      >{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 选择柜子 -->
+  <view class="field anim-in" style="animation-delay: 0.14s">
+    <text class="field-label">放入柜子</text>
+    <view class="cabinet-selector card" bindtap="openCabinetPicker">
+      <text class="selector-text {{cabinetId ? '' : 'placeholder'}}">
+        {{cabinetName || '点击选择柜子'}}
+      </text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 可选描述 -->
+  <view class="field anim-in" style="animation-delay: 0.17s">
+    <text class="field-label">描述（可选）</text>
+    <input class="desc-input card" placeholder="如：蓝色牛仔外套" value="{{description}}" bindinput="onDescInput" />
+  </view>
+
+  <!-- 提交 -->
+  <button class="submit-btn btn-primary anim-in" style="animation-delay: 0.2s" bindtap="submit" disabled="{{uploading}}">
+    {{uploading ? '上传中...' : '✅ 添加到衣柜'}}
+  </button>
+
+  <!-- 柜子选择器弹窗 -->
+  <view class="modal-mask" wx:if="{{showCabinetPicker}}" bindtap="closePicker">
+    <view class="picker-modal card" catchtap="">
+      <view class="picker-header">
+        <text class="picker-title">选择柜子</text>
+        <text class="picker-close" bindtap="closePicker">✕</text>
+      </view>
+      <view class="picker-crumbs" wx:if="{{pickerBreadcrumbs.length > 0}}">
+        <text class="crumb-back" bindtap="onPickerBack">‹ 返回上级</text>
+      </view>
+      <scroll-view class="picker-list" scroll-y>
+        <view class="picker-item" wx:for="{{pickerCabinets}}" wx:key="id">
+          <view class="picker-item-main" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onPickerSelect">
+            <text class="picker-icon">{{item.icon}}</text>
+            <text class="picker-name">{{item.name}}</text>
+          </view>
+          <text class="picker-drill" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onPickerCabinetTap" wx:if="{{item.sub_cabinets > 0}}">进入 ›</text>
+        </view>
+        <view class="picker-empty" wx:if="{{pickerCabinets.length === 0}}">
+          <text>此柜子下没有子柜子</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

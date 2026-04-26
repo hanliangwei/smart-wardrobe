@@ -1,0 +1,38 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/cabinet/cabinet",
+    "pages/add-clothing/add-clothing",
+    "pages/search/search",
+    "pages/search-result/search-result"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#F7F6F3",
+    "navigationBarTitleText": "智能衣柜",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7F6F3",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#AAAAAA",
+    "selectedColor": "#D4724E",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "衣柜",
+        "iconPath": "assets/icon-wardrobe.png",
+        "selectedIconPath": "assets/icon-wardrobe-active.png"
+      },
+      {
+        "pagePath": "pages/search/search",
+        "text": "搜索",
+        "iconPath": "assets/icon-search.png",
+        "selectedIconPath": "assets/icon-search-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

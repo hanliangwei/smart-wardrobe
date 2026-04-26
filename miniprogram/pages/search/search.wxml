@@ -1,0 +1,70 @@
+<view class="page-container">
+  <view class="header anim-in">
+    <text class="logo-emoji">🔍</text>
+    <text class="title">找衣服</text>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-box card anim-in" style="animation-delay: 0.05s">
+    <input
+      class="search-input"
+      placeholder="描述衣物，如：红色格子衬衫"
+      value="{{query}}"
+      bindinput="onQueryInput"
+      bindconfirm="onSearch"
+      confirm-type="search"
+    />
+  </view>
+
+  <!-- 过滤器 -->
+  <view class="filters anim-in" style="animation-delay: 0.1s">
+    <view class="filter-group">
+      <text class="filter-label">季节</text>
+      <view class="filter-chips">
+        <text
+          class="chip {{season === item ? 'active' : ''}}"
+          wx:for="{{seasonOptions}}"
+          wx:key="*this"
+          data-value="{{item}}"
+          bindtap="onSeasonTap"
+        >{{item}}</text>
+      </view>
+    </view>
+
+    <view class="filter-group">
+      <text class="filter-label">分类</text>
+      <view class="filter-chips">
+        <text
+          class="chip {{gender === item ? 'active' : ''}}"
+          wx:for="{{genderOptions}}"
+          wx:key="*this"
+          data-value="{{item}}"
+          bindtap="onGenderTap"
+        >{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索按钮 -->
+  <button class="btn-primary search-btn anim-in" style="animation-delay: 0.15s" bindtap="onSearch" disabled="{{searching}}">
+    {{searching ? '搜索中...' : '搜索'}}
+  </button>
+
+  <!-- 快捷搜索标签 -->
+  <view class="hint-section anim-in" style="animation-delay: 0.2s">
+    <text class="hint-label">试试搜：</text>
+    <view class="hint-tags">
+      <text class="hint-tag" bindtap="onTagTap" data-value="黑色外套">黑色外套</text>
+      <text class="hint-tag" bindtap="onTagTap" data-value="红色连衣裙">红色连衣裙</text>
+      <text class="hint-tag" bindtap="onTagTap" data-value="蓝色牛仔裤">蓝色牛仔裤</text>
+      <text class="hint-tag" bindtap="onTagTap" data-value="白色T恤">白色T恤</text>
+      <text class="hint-tag" bindtap="onTagTap" data-value="格子衬衫">格子衬衫</text>
+    </view>
+  </view>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-mask" wx:if="{{searching}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">AI 正在分析...</text>
+  </view>
+</view>

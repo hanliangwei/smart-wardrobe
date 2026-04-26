@@ -1,0 +1,89 @@
+.header {
+  text-align: center;
+  padding: 40rpx 0 32rpx;
+}
+.logo-emoji { font-size: 60rpx; display: block; margin-bottom: 6rpx; }
+.title {
+  display: block; font-size: 40rpx; font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 2rpx;
+}
+
+/* 搜索框 */
+.search-box {
+  padding: 8rpx 24rpx;
+  margin-bottom: 28rpx;
+}
+.search-input {
+  height: 80rpx;
+  font-size: 30rpx;
+  color: var(--text-primary);
+}
+
+/* 过滤器 */
+.filters {
+  margin-bottom: 28rpx;
+}
+.filter-group {
+  margin-bottom: 20rpx;
+}
+.filter-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.search-btn {
+  width: 100%;
+  margin-bottom: 36rpx;
+}
+
+/* 快捷标签 */
+.hint-section {
+  margin-top: 8rpx;
+}
+.hint-label {
+  font-size: 24rpx;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 14rpx;
+}
+.hint-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+.hint-tag {
+  font-size: 24rpx;
+  padding: 10rpx 24rpx;
+  border-radius: 40rpx;
+  background: #fff;
+  color: var(--text-secondary);
+  border: 1rpx solid var(--border);
+}
+.hint-tag:active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 加载 */
+.loading-mask {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 999;
+}
+.loading-spinner {
+  width: 56rpx; height: 56rpx;
+  border: 5rpx solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-bottom: 20rpx;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: var(--text-secondary); font-size: 28rpx; }

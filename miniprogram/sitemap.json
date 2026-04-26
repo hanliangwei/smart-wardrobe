@@ -1,0 +1,7 @@
+{
+  "desc": "智能衣柜小程序",
+  "rules": [{
+    "action": "allow",
+    "page": "*"
+  }]
+}
