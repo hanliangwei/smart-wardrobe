@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A">
+  <title>搜索 - 智能衣柜</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page { padding-bottom: 32px; }
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-top: 8px;
+    }
+    .results-query {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .results-count {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .result-card .result-path-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .search-section { margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header anim-in">
+      <a class="back-btn" href="index.html">
+        <span class="icon" id="icon-back"></span>
+      </a>
+      <h1 class="page-title">搜索<span class="page-title-accent">衣物</span></h1>
+    </div>
+
+    <div class="search-section anim-in" style="animation-delay:0.05s">
+      <div class="search-box">
+        <span class="icon" id="icon-search" style="color:var(--text-muted)"></span>
+        <input type="text" class="search-input" id="search-input" placeholder="描述你要找的衣物...">
+        <button class="search-submit" id="btn-search">搜索</button>
+      </div>
+    </div>
+
+    <div class="anim-in" style="animation-delay:0.1s; margin-top: 20px;">
+      <div class="filter-group">
+        <span class="filter-label">季节</span>
+        <div class="chip-group" id="season-chips"></div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">分类</span>
+        <div class="chip-group" id="gender-chips"></div>
+      </div>
+    </div>
+
+    <div class="hint-section anim-in" style="animation-delay:0.15s" id="hint-section">
+      <span class="hint-label">试试搜：</span>
+      <div class="hint-tags" id="hint-tags">
+        <button class="hint-tag" data-q="黑色外套">黑色外套</button>
+        <button class="hint-tag" data-q="红色连衣裙">红色连衣裙</button>
+        <button class="hint-tag" data-q="蓝色牛仔裤">蓝色牛仔裤</button>
+        <button class="hint-tag" data-q="白色T恤">白色T恤</button>
+        <button class="hint-tag" data-q="格子衬衫">格子衬衫</button>
+      </div>
+    </div>
+
+    <div id="results-area" style="display:none">
+      <div class="results-header">
+        <span class="results-query" id="results-query"></span>
+        <span class="results-count" id="results-count"></span>
+      </div>
+      <div id="results-list"></div>
+    </div>
+
+    <div class="empty-state" id="empty-result" style="display:none">
+      <div class="empty-icon" id="empty-icon"></div>
+      <div class="empty-text">没有找到匹配的衣物<br>试试换个描述或调整筛选条件</div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('icon-back').innerHTML = App.ICONS.chevronLeft;
+    document.getElementById('icon-search').innerHTML = App.ICONS.search;
+    document.getElementById('empty-icon').innerHTML = App.icon('search', 'icon-xl');
+
+    let selectedSeason = '全部';
+    let selectedGender = '全部';
+
+    const seasonOptions = ['全部', '春', '夏', '秋', '冬'];
+    const seasonChips = document.getElementById('season-chips');
+    seasonChips.innerHTML = seasonOptions.map(s =>
+      `<button class="chip ${s === selectedSeason ? 'active' : ''}" data-value="${s}">${s}</button>`
+    ).join('');
+    seasonChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      selectedSeason = chip.dataset.value;
+      seasonChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value === selectedSeason));
+    });
+
+    const genderOptions = ['全部', '男', '女', '童'];
+    const genderChips = document.getElementById('gender-chips');
+    genderChips.innerHTML = genderOptions.map(g =>
+      `<button class="chip ${g === selectedGender ? 'active' : ''}" data-value="${g}">${g}</button>`
+    ).join('');
+    genderChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      selectedGender = chip.dataset.value;
+      genderChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value === selectedGender));
+    });
+
+    document.getElementById('hint-tags').addEventListener('click', (e) => {
+      const tag = e.target.closest('.hint-tag');
+      if (!tag) return;
+      document.getElementById('search-input').value = tag.dataset.q;
+      doSearch();
+    });
+
+    document.getElementById('btn-search').addEventListener('click', doSearch);
+    document.getElementById('search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doSearch();
+    });
+
+    async function doSearch() {
+      const query = document.getElementById('search-input').value.trim();
+      const hasQuery = query.length > 0;
+      const btn = document.getElementById('btn-search');
+
+      btn.disabled = true;
+      btn.textContent = '...';
+      App.showLoading(hasQuery ? 'AI 正在分析...' : '加载中...');
+
+      try {
+        let res;
+        let mode = 'text';
+        let displayQuery;
+
+        if (hasQuery) {
+          res = await API.searchByText(query, selectedSeason, selectedGender);
+          displayQuery = `"${query}"`;
+        } else {
+          res = await API.listByFilter(selectedSeason, selectedGender);
+          mode = 'filter';
+          displayQuery = selectedSeason !== '全部' || selectedGender !== '全部'
+            ? `${selectedSeason} / ${selectedGender}`
+            : '全部衣物';
+        }
+
+        App.hideLoading();
+        renderResults(res.results || [], displayQuery, mode);
+      } catch (err) {
+        App.hideLoading();
+        App.toast('搜索失败：' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '搜索';
+      }
+    }
+
+    function renderResults(results, queryText, mode) {
+      const area = document.getElementById('results-area');
+      const list = document.getElementById('results-list');
+      const empty = document.getElementById('empty-result');
+      const hints = document.getElementById('hint-section');
+
+      hints.style.display = 'none';
+
+      if (results.length === 0) {
+        area.style.display = 'none';
+        empty.style.display = 'flex';
+        return;
+      }
+
+      empty.style.display = 'none';
+      area.style.display = 'block';
+
+      document.getElementById('results-query').textContent = queryText;
+      document.getElementById('results-count').textContent = `找到 ${results.length} 件`;
+
+      list.innerHTML = results.map((r, i) => {
+        const scorePercent = mode === 'text' ? Math.round((r.score || 0) * 100) : 0;
+        const tags = [];
+        if (r.season) tags.push(r.season);
+        if (r.gender) tags.push(r.gender);
+
+        return `
+          <div class="result-card card anim-in" style="animation-delay:${i * 0.04}s"
+               data-cabinet-id="${r.cabinet_id}" data-cabinet-path="${App.escapeHtml(r.cabinet_path || '')}">
+            <img class="result-img" src="${API.getImageUrl(r.image_path)}" alt=""
+                 loading="lazy" data-full="${API.getImageUrl(r.image_path)}">
+            <div class="result-info">
+              ${mode === 'text' ? `
+                <div class="score-row">
+                  <div class="score-bar-bg"><div class="score-bar" style="width:${scorePercent}%"></div></div>
+                  <span class="score-text">${scorePercent}%</span>
+                </div>
+              ` : ''}
+              <div class="result-path">
+                ${App.icon('mapPin', 'icon-sm')}
+                <span class="result-path-text">${App.escapeHtml(r.cabinet_path || '未知')}</span>
+              </div>
+              ${tags.length ? `<div class="result-tags">${tags.map(t => `<span class="tag tag-muted">${t}</span>`).join('')}</div>` : ''}
+              ${r.description ? `<div class="result-desc">${App.escapeHtml(r.description)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.result-card').forEach(card => {
+        const img = card.querySelector('.result-img');
+        img.addEventListener('click', (e) => {
+          e.stopPropagation();
+          App.previewImage(img.dataset.full);
+        });
+
+        card.addEventListener('click', () => {
+          const cid = card.dataset.cabinetId;
+          const cpath = card.dataset.cabinetPath;
+          const name = cpath ? cpath.split(' > ').pop() : '';
+          window.location.href = `cabinet.html?id=${cid}&name=${encodeURIComponent(name)}`;
+        });
+      });
+    }
+  </script>
+</body>
+</html>

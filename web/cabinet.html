@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A">
+  <title>柜子 - 智能衣柜</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page" id="app">
+    <div class="page-header anim-in">
+      <a class="back-btn" href="index.html" id="back-btn">
+        <span class="icon" id="icon-back"></span>
+      </a>
+      <h1 class="page-title" id="page-title">柜子</h1>
+    </div>
+
+    <div class="breadcrumbs anim-in" style="animation-delay:0.04s" id="breadcrumbs"></div>
+
+    <div class="section" id="subcabinets-section" style="display:none">
+      <div class="section-header">
+        <span class="section-title" id="subcabinets-title">子柜子</span>
+      </div>
+      <div class="cabinet-grid stagger" id="subcabinets-grid"></div>
+    </div>
+
+    <div class="section" id="clothes-section">
+      <div class="section-header">
+        <span class="section-title" id="clothes-title">衣物</span>
+      </div>
+      <div class="clothes-grid stagger" id="clothes-grid"></div>
+    </div>
+
+    <div class="empty-state" id="empty-state" style="display:none">
+      <div class="empty-icon" id="empty-icon"></div>
+      <div class="empty-text">这里还是空的<br>添加衣物或创建子柜子吧</div>
+    </div>
+  </div>
+
+  <!-- 底部操作栏 -->
+  <div class="bottom-bar" id="bottom-bar" style="display:none">
+    <a class="bar-btn" id="btn-add-clothing">
+      <span class="icon" id="icon-camera"></span>
+      <span>添加衣物</span>
+    </a>
+    <button class="bar-btn" id="btn-add-subcabinet">
+      <span class="icon" id="icon-folder-plus"></span>
+      <span>新建子柜</span>
+    </button>
+  </div>
+
+  <!-- 新建柜子弹窗 -->
+  <div class="modal-overlay" id="modal-create">
+    <div class="modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-create-title">新建柜子</div>
+      <input type="text" class="input-field" id="input-cabinet-name" placeholder="柜子名称" maxlength="50">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="App.hideModal('modal-create')">取消</button>
+        <button class="btn btn-primary" id="btn-confirm-create">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重命名弹窗 -->
+  <div class="modal-overlay" id="modal-rename">
+    <div class="modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">重命名柜子</div>
+      <input type="text" class="input-field" id="input-rename" placeholder="新名称" maxlength="50">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="App.hideModal('modal-rename')">取消</button>
+        <button class="btn btn-primary" id="btn-confirm-rename">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右键菜单 -->
+  <div class="context-menu-backdrop" id="ctx-backdrop"></div>
+  <div class="context-menu" id="ctx-menu">
+    <div class="context-menu-item" id="ctx-rename">
+      <span class="icon" id="ctx-icon-edit"></span>
+      重命名
+    </div>
+    <div class="context-menu-item danger" id="ctx-delete">
+      <span class="icon" id="ctx-icon-trash"></span>
+      删除
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // --- 初始化图标 ---
+    document.getElementById('icon-back').innerHTML = App.ICONS.chevronLeft;
+    document.getElementById('icon-camera').innerHTML = App.ICONS.camera;
+    document.getElementById('icon-folder-plus').innerHTML = App.ICONS.plus;
+    document.getElementById('empty-icon').innerHTML = App.icon('shirt', 'icon-xl');
+    document.getElementById('ctx-icon-edit').innerHTML = App.ICONS.edit;
+    document.getElementById('ctx-icon-trash').innerHTML = App.ICONS.trash;
+
+    // --- 状态 ---
+    let cabinetId = App.getParam('id') ? parseInt(App.getParam('id')) : null;
+    let cabinetName = App.getParam('name') ? decodeURIComponent(App.getParam('name')) : '';
+    let subCabinets = [];
+    let clothes = [];
+    let ctxTarget = null;
+    let renameTargetId = null;
+
+    const isRoot = cabinetId === null;
+
+    if (cabinetName) {
+      document.getElementById('page-title').textContent = cabinetName;
+      document.title = `${cabinetName} - 智能衣柜`;
+    } else {
+      document.getElementById('page-title').textContent = '我的衣柜';
+    }
+
+    if (!isRoot) {
+      document.getElementById('bottom-bar').style.display = 'flex';
+    }
+
+    document.getElementById('back-btn').href = isRoot ? 'index.html' : 'javascript:void(0)';
+    if (!isRoot) {
+      document.getElementById('back-btn').onclick = (e) => {
+        e.preventDefault();
+        window.history.back();
+      };
+    }
+
+    document.getElementById('btn-add-clothing').onclick = () => {
+      if (cabinetId) {
+        window.location.href = `add-clothing.html?cabinetId=${cabinetId}&cabinetName=${encodeURIComponent(cabinetName)}`;
+      }
+    };
+
+    // --- 加载数据 ---
+    async function loadData() {
+      try {
+        const [cabRes, clothesRes] = await Promise.all([
+          API.getCabinets(cabinetId),
+          cabinetId ? API.getClothes(cabinetId) : Promise.resolve({ clothes: [] })
+        ]);
+
+        subCabinets = cabRes.cabinets || [];
+        clothes = clothesRes.clothes || [];
+
+        renderBreadcrumbs(cabRes.breadcrumbs || []);
+        renderSubCabinets();
+        renderClothes();
+
+        // 根目录显示 FAB 按钮
+        if (isRoot) {
+          document.getElementById('bottom-bar').style.display = 'none';
+          let fab = document.getElementById('fab-create');
+          if (!fab) {
+            fab = document.createElement('button');
+            fab.id = 'fab-create';
+            fab.className = 'fab';
+            fab.innerHTML = App.icon('plus', 'icon-lg');
+            fab.onclick = () => showCreateModal(null);
+            document.body.appendChild(fab);
+          }
+        }
+
+        const isEmpty = subCabinets.length === 0 && clothes.length === 0;
+        document.getElementById('empty-state').style.display = isEmpty ? 'flex' : 'none';
+
+      } catch (e) {
+        console.error('Load failed:', e);
+        App.toast('加载失败', 'error');
+      }
+    }
+
+    // --- 渲染 ---
+    function renderBreadcrumbs(crumbs) {
+      const el = document.getElementById('breadcrumbs');
+      if (!crumbs || crumbs.length === 0) {
+        el.style.display = 'none';
+        return;
+      }
+      el.style.display = 'flex';
+      let html = `<a class="crumb" href="cabinet.html">${App.icon('home', 'icon-sm')}</a>`;
+      crumbs.forEach((c, i) => {
+        html += `<span class="crumb-sep">/</span>`;
+        if (i === crumbs.length - 1) {
+          html += `<span class="crumb current">${App.escapeHtml(c.name)}</span>`;
+        } else {
+          html += `<a class="crumb" href="cabinet.html?id=${c.id}&name=${encodeURIComponent(c.name)}">${App.escapeHtml(c.name)}</a>`;
+        }
+      });
+      el.innerHTML = html;
+    }
+
+    function renderSubCabinets() {
+      const section = document.getElementById('subcabinets-section');
+      const grid = document.getElementById('subcabinets-grid');
+      const title = document.getElementById('subcabinets-title');
+
+      if (subCabinets.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      title.textContent = `子柜子 (${subCabinets.length})`;
+
+      grid.innerHTML = subCabinets.map(c => `
+        <div class="cabinet-card card" data-id="${c.id}" data-name="${App.escapeHtml(c.name)}">
+          <div class="cabinet-icon">${App.icon('folder')}</div>
+          <div class="cabinet-name">${App.escapeHtml(c.name)}</div>
+          <div class="cabinet-meta">
+            ${c.sub_cabinets ? `<span>${App.icon('folder', 'icon-sm')} ${c.sub_cabinets}</span>` : ''}
+            ${c.clothes ? `<span>${App.icon('shirt', 'icon-sm')} ${c.clothes}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.cabinet-card').forEach(card => {
+        const id = parseInt(card.dataset.id);
+        const name = card.dataset.name;
+
+        card.addEventListener('click', () => {
+          window.location.href = `cabinet.html?id=${id}&name=${encodeURIComponent(name)}`;
+        });
+
+        let longTimer = null;
+        card.addEventListener('touchstart', (e) => {
+          longTimer = setTimeout(() => {
+            e.preventDefault();
+            showContextMenu(e.touches[0].clientX, e.touches[0].clientY, 'cabinet', id, name);
+          }, 600);
+        }, { passive: false });
+        card.addEventListener('touchend', () => clearTimeout(longTimer));
+        card.addEventListener('touchmove', () => clearTimeout(longTimer));
+
+        card.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          showContextMenu(e.clientX, e.clientY, 'cabinet', id, name);
+        });
+      });
+    }
+
+    function renderClothes() {
+      const section = document.getElementById('clothes-section');
+      const grid = document.getElementById('clothes-grid');
+      const title = document.getElementById('clothes-title');
+
+      if (clothes.length === 0 && !isRoot) {
+        title.textContent = '衣物 (0)';
+        grid.innerHTML = '';
+        return;
+      }
+      if (isRoot) {
+        section.style.display = 'none';
+        return;
+      }
+
+      title.textContent = `衣物 (${clothes.length})`;
+
+      grid.innerHTML = clothes.map(c => {
+        const tags = [];
+        if (c.season && c.season !== '四季') tags.push(c.season);
+        if (c.gender && c.gender !== '通用') tags.push(c.gender);
+
+        return `
+          <div class="clothing-card" data-id="${c.id}" data-img="${API.getImageUrl(c.image_path)}">
+            <button class="delete-btn" data-id="${c.id}" title="删除">${App.ICONS.x}</button>
+            <img class="clothing-img" src="${API.getImageUrl(c.image_path)}" alt="" loading="lazy">
+            <div class="clothing-info">
+              ${tags.length ? `<div class="clothing-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+              ${c.description ? `<div class="clothing-desc">${App.escapeHtml(c.description)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      grid.querySelectorAll('.clothing-card').forEach(card => {
+        const id = parseInt(card.dataset.id);
+        const imgUrl = card.dataset.img;
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-btn')) return;
+          App.previewImage(imgUrl);
+        });
+
+        card.addEventListener('touchstart', () => {
+          card.querySelector('.delete-btn').classList.add('visible');
+        });
+
+        card.querySelector('.delete-btn').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const ok = await App.confirm('删除衣物', '此操作不可撤销，确认删除吗？', {
+            confirmText: '删除',
+            cancelText: '取消',
+            danger: true
+          });
+          if (ok) {
+            try {
+              await API.deleteClothing(id);
+              App.toast('已删除', 'success');
+              loadData();
+            } catch (err) {
+              App.toast('删除失败', 'error');
+            }
+          }
+        });
+      });
+    }
+
+    // --- 右键菜单 ---
+    function showContextMenu(x, y, type, id, name) {
+      ctxTarget = { type, id, name };
+      const menu = document.getElementById('ctx-menu');
+      const backdrop = document.getElementById('ctx-backdrop');
+
+      menu.style.left = Math.min(x, window.innerWidth - 180) + 'px';
+      menu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
+
+      menu.classList.add('active');
+      backdrop.classList.add('active');
+    }
+
+    function hideContextMenu() {
+      document.getElementById('ctx-menu').classList.remove('active');
+      document.getElementById('ctx-backdrop').classList.remove('active');
+      ctxTarget = null;
+    }
+
+    document.getElementById('ctx-backdrop').addEventListener('click', hideContextMenu);
+
+    document.getElementById('ctx-rename').addEventListener('click', () => {
+      if (!ctxTarget) return;
+      const target = { ...ctxTarget };
+      hideContextMenu();
+      renameTargetId = target.id;
+      document.getElementById('input-rename').value = target.name;
+      App.showModal('modal-rename');
+    });
+
+    document.getElementById('ctx-delete').addEventListener('click', async () => {
+      if (!ctxTarget) return;
+      const target = { ...ctxTarget };
+      hideContextMenu();
+
+      const ok = await App.confirm(
+        '删除柜子',
+        `删除「${target.name}」将同时删除内部所有子柜子和衣物，确认吗？`,
+        { confirmText: '删除', cancelText: '取消', danger: true }
+      );
+      if (ok) {
+        try {
+          await API.deleteCabinet(target.id);
+          App.toast('已删除', 'success');
+          loadData();
+        } catch (err) {
+          App.toast('删除失败', 'error');
+        }
+      }
+    });
+
+    // --- 新建柜子 ---
+    function showCreateModal() {
+      document.getElementById('input-cabinet-name').value = '';
+      document.getElementById('modal-create-title').textContent = isRoot ? '新建柜子' : '新建子柜子';
+      App.showModal('modal-create');
+    }
+
+    document.getElementById('btn-add-subcabinet').addEventListener('click', showCreateModal);
+
+    document.getElementById('btn-confirm-create').addEventListener('click', async () => {
+      const name = document.getElementById('input-cabinet-name').value.trim();
+      if (!name) {
+        App.toast('请输入名称', 'error');
+        return;
+      }
+      try {
+        await API.createCabinet(name, cabinetId);
+        App.hideModal('modal-create');
+        App.toast('创建成功', 'success');
+        loadData();
+      } catch (err) {
+        App.toast('创建失败', 'error');
+      }
+    });
+
+    document.getElementById('input-cabinet-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-confirm-create').click();
+    });
+
+    // --- 重命名柜子 ---
+    document.getElementById('btn-confirm-rename').addEventListener('click', async () => {
+      const name = document.getElementById('input-rename').value.trim();
+      if (!name) {
+        App.toast('请输入名称', 'error');
+        return;
+      }
+      try {
+        await API.updateCabinet(renameTargetId, name, '');
+        App.hideModal('modal-rename');
+        App.toast('已重命名', 'success');
+        loadData();
+      } catch (err) {
+        App.toast('重命名失败', 'error');
+      }
+    });
+
+    document.getElementById('input-rename').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-confirm-rename').click();
+    });
+
+    // --- 弹窗点击背景关闭 ---
+    document.getElementById('modal-create').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-create') App.hideModal('modal-create');
+    });
+    document.getElementById('modal-rename').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-rename') App.hideModal('modal-rename');
+    });
+
+    // --- 初始化 ---
+    loadData();
+  </script>
+</body>
+</html>

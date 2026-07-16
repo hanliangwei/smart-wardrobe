@@ -38,6 +38,11 @@ app.include_router(search.router)
 def health():
     return {"status": "ok"}
 
+# Web frontend (must be mounted AFTER API routers)
+web_dir = Path(__file__).parent.parent / "web"
+if web_dir.exists():
+    app.mount("/", StaticFiles(directory=str(web_dir), html=True), name="web")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="description" content="智能衣柜 - AI 驱动的衣物管理">
+  <title>智能衣柜</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 48px 0 32px;
+    }
+
+    .hero-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .hero-icon .icon {
+      width: 32px;
+      height: 32px;
+      color: var(--accent);
+    }
+
+    .hero-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .entry-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .entry-card {
+      padding: 28px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .entry-card .entry-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .entry-card .entry-icon .icon {
+      width: 26px;
+      height: 26px;
+    }
+
+    .entry-card:first-child .entry-icon {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .entry-card:last-child .entry-icon {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-secondary);
+    }
+
+    .entry-card .entry-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .entry-card .entry-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 40px;
+      padding: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .quick-cabinets {
+      margin-top: 32px;
+    }
+
+    .quick-cabinets .section-header {
+      margin-bottom: 14px;
+    }
+
+    .quick-list {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .quick-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-item {
+      flex-shrink: 0;
+      width: 120px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .quick-item .qi-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      color: var(--accent);
+    }
+
+    .quick-item .qi-name {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .quick-item .qi-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="hero anim-in">
+      <div class="hero-icon" id="hero-icon"></div>
+      <h1 class="hero-title"><span class="page-title-accent">智能</span>衣柜</h1>
+      <p class="hero-sub">AI 驱动的衣物管理助手</p>
+    </div>
+
+    <div class="entry-cards anim-in" style="animation-delay: 0.08s">
+      <a class="entry-card card" href="cabinet.html">
+        <div class="entry-icon" id="entry-wardrobe-icon"></div>
+        <div class="entry-title">我的衣柜</div>
+        <div class="entry-desc">浏览和管理你的柜子</div>
+      </a>
+      <a class="entry-card card" href="search.html">
+        <div class="entry-icon" id="entry-search-icon"></div>
+        <div class="entry-title">搜索衣物</div>
+        <div class="entry-desc">通过描述查找衣物位置</div>
+      </a>
+    </div>
+
+    <div class="stats anim-in" style="animation-delay: 0.16s">
+      <div class="stat-item">
+        <div class="stat-num" id="stat-cabinets">-</div>
+        <div class="stat-label">柜子</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-clothes">-</div>
+        <div class="stat-label">衣物</div>
+      </div>
+    </div>
+
+    <div class="quick-cabinets anim-in" style="animation-delay: 0.24s" id="quick-section">
+      <div class="section-header">
+        <span class="section-title">快速访问</span>
+      </div>
+      <div class="quick-list stagger" id="quick-list"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('hero-icon').innerHTML = App.icon('shirt', 'icon-xl');
+    document.getElementById('entry-wardrobe-icon').innerHTML = App.icon('box', 'icon-lg');
+    document.getElementById('entry-search-icon').innerHTML = App.icon('search', 'icon-lg');
+
+    async function loadStats() {
+      try {
+        const res = await API.getCabinets();
+        const cabinets = res.cabinets || [];
+        document.getElementById('stat-cabinets').textContent = cabinets.length;
+
+        let totalClothes = 0;
+        cabinets.forEach(c => { totalClothes += (c.clothes || 0); });
+        document.getElementById('stat-clothes').textContent = totalClothes;
+
+        const list = document.getElementById('quick-list');
+        const section = document.getElementById('quick-section');
+        if (cabinets.length === 0) {
+          section.style.display = 'none';
+          return;
+        }
+        list.innerHTML = cabinets.slice(0, 8).map(c => `
+          <a class="quick-item card" href="cabinet.html?id=${c.id}&name=${encodeURIComponent(c.name)}">
+            <div class="qi-icon">${App.icon('folder')}</div>
+            <div class="qi-name">${App.escapeHtml(c.name)}</div>
+            <div class="qi-meta">${(c.sub_cabinets || 0) + (c.clothes || 0)} 项</div>
+          </a>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+
+</html>

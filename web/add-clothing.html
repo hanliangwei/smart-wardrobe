@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A">
+  <title>添加衣物 - 智能衣柜</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page { padding-bottom: 32px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header anim-in">
+      <button class="back-btn" id="back-btn">
+        <span class="icon" id="icon-back"></span>
+      </button>
+      <h1 class="page-title">添加衣物</h1>
+    </div>
+
+    <div class="form-field anim-in" style="animation-delay:0.05s">
+      <label class="form-label">照片</label>
+      <div class="photo-area" id="photo-area">
+        <div class="photo-placeholder" id="photo-placeholder">
+          <span class="icon" id="icon-camera-big" style="width:48px;height:48px;opacity:0.5;color:var(--text-muted)"></span>
+          <span style="font-size:14px;color:var(--text-muted)">点击拍照或从相册选择</span>
+        </div>
+        <img class="preview-img" id="preview-img" style="display:none" alt="预览">
+        <div class="retake-hint" id="retake-hint" style="display:none">点击更换照片</div>
+      </div>
+      <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
+    </div>
+
+    <div class="form-field anim-in" style="animation-delay:0.1s">
+      <label class="form-label">季节</label>
+      <div class="chip-group" id="season-chips"></div>
+    </div>
+
+    <div class="form-field anim-in" style="animation-delay:0.15s">
+      <label class="form-label">分类</label>
+      <div class="chip-group" id="gender-chips"></div>
+    </div>
+
+    <div class="form-field anim-in" style="animation-delay:0.2s">
+      <label class="form-label">柜子</label>
+      <div class="cabinet-selector card" id="cabinet-selector">
+        <span class="selector-text placeholder" id="selector-text">点击选择柜子</span>
+        <span class="arrow" id="icon-chevron"></span>
+      </div>
+    </div>
+
+    <div class="form-field anim-in" style="animation-delay:0.25s">
+      <label class="form-label">描述（可选）</label>
+      <input type="text" class="input-field" id="input-desc" placeholder="如：蓝色牛仔外套" maxlength="100">
+    </div>
+
+    <button class="btn btn-primary btn-full mt-24 anim-in" style="animation-delay:0.3s" id="btn-submit">
+      添加到衣柜
+    </button>
+  </div>
+
+  <!-- 柜子选择弹窗 -->
+  <div class="modal-overlay" id="modal-picker">
+    <div class="modal-content">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="modal-title" style="margin-bottom:0">选择柜子</div>
+        <button style="padding:8px;color:var(--text-muted)" onclick="App.hideModal('modal-picker')">
+          <span class="icon" id="icon-picker-close"></span>
+        </button>
+      </div>
+      <div class="picker-back" id="picker-back" style="display:none">
+        <span class="icon icon-sm" id="icon-picker-back"></span>
+        返回上级
+      </div>
+      <div class="picker-list" id="picker-list"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('icon-back').innerHTML = App.ICONS.chevronLeft;
+    document.getElementById('icon-camera-big').innerHTML = App.ICONS.camera;
+    document.getElementById('icon-chevron').innerHTML = App.ICONS.chevronRight;
+    document.getElementById('icon-picker-close').innerHTML = App.ICONS.x;
+    document.getElementById('icon-picker-back').innerHTML = App.ICONS.chevronLeft;
+
+    let selectedFile = null;
+    let selectedSeason = '四季';
+    let selectedGender = '通用';
+    let selectedCabinetId = App.getParam('cabinetId') ? parseInt(App.getParam('cabinetId')) : null;
+    let selectedCabinetName = App.getParam('cabinetName') ? decodeURIComponent(App.getParam('cabinetName')) : '';
+    let pickerParentId = null;
+    let pickerBreadcrumbs = [];
+
+    document.getElementById('back-btn').onclick = () => window.history.back();
+
+    if (selectedCabinetId && selectedCabinetName) {
+      const sText = document.getElementById('selector-text');
+      sText.textContent = selectedCabinetName;
+      sText.classList.remove('placeholder');
+    }
+
+    const fileInput = document.getElementById('file-input');
+    const photoArea = document.getElementById('photo-area');
+    const previewImg = document.getElementById('preview-img');
+    const placeholder = document.getElementById('photo-placeholder');
+    const retakeHint = document.getElementById('retake-hint');
+
+    photoArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedFile = file;
+      const url = URL.createObjectURL(file);
+      previewImg.src = url;
+      previewImg.style.display = 'block';
+      placeholder.style.display = 'none';
+      retakeHint.style.display = 'block';
+      photoArea.classList.add('has-image');
+    });
+
+    const seasonOptions = ['春', '夏', '秋', '冬', '四季'];
+    const seasonChips = document.getElementById('season-chips');
+    seasonChips.innerHTML = seasonOptions.map(s =>
+      `<button class="chip ${s === selectedSeason ? 'active' : ''}" data-value="${s}">${s}</button>`
+    ).join('');
+    seasonChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      selectedSeason = chip.dataset.value;
+      seasonChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value === selectedSeason));
+    });
+
+    const genderOptions = ['男', '女', '童', '通用'];
+    const genderChips = document.getElementById('gender-chips');
+    genderChips.innerHTML = genderOptions.map(g =>
+      `<button class="chip ${g === selectedGender ? 'active' : ''}" data-value="${g}">${g}</button>`
+    ).join('');
+    genderChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      selectedGender = chip.dataset.value;
+      genderChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value === selectedGender));
+    });
+
+    document.getElementById('cabinet-selector').addEventListener('click', () => {
+      pickerParentId = null;
+      pickerBreadcrumbs = [];
+      loadPickerCabinets(null);
+      App.showModal('modal-picker');
+    });
+
+    document.getElementById('modal-picker').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-picker') App.hideModal('modal-picker');
+    });
+
+    document.getElementById('picker-back').addEventListener('click', () => {
+      if (pickerBreadcrumbs.length <= 1) {
+        loadPickerCabinets(null);
+      } else {
+        loadPickerCabinets(pickerBreadcrumbs[pickerBreadcrumbs.length - 2].id);
+      }
+    });
+
+    async function loadPickerCabinets(parentId) {
+      try {
+        const res = await API.getCabinets(parentId);
+        pickerParentId = parentId;
+        pickerBreadcrumbs = res.breadcrumbs || [];
+
+        const backBtn = document.getElementById('picker-back');
+        backBtn.style.display = parentId !== null ? 'flex' : 'none';
+
+        const list = document.getElementById('picker-list');
+        const cabinets = res.cabinets || [];
+
+        if (cabinets.length === 0) {
+          list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">此柜子下没有子柜子</div>';
+          return;
+        }
+
+        list.innerHTML = cabinets.map(c => `
+          <div class="picker-item">
+            <div class="picker-item-main" data-id="${c.id}" data-name="${App.escapeHtml(c.name)}">
+              ${App.icon('folder')}
+              <span>${App.escapeHtml(c.name)}</span>
+            </div>
+            ${c.sub_cabinets > 0 ? `<span class="picker-drill" data-id="${c.id}">进入 &rsaquo;</span>` : ''}
+          </div>
+        `).join('');
+
+        list.querySelectorAll('.picker-item-main').forEach(el => {
+          el.addEventListener('click', () => {
+            selectedCabinetId = parseInt(el.dataset.id);
+            selectedCabinetName = el.dataset.name;
+            const sText = document.getElementById('selector-text');
+            sText.textContent = selectedCabinetName;
+            sText.classList.remove('placeholder');
+            App.hideModal('modal-picker');
+          });
+        });
+
+        list.querySelectorAll('.picker-drill').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            loadPickerCabinets(parseInt(el.dataset.id));
+          });
+        });
+      } catch (err) {
+        App.toast('加载失败', 'error');
+      }
+    }
+
+    document.getElementById('btn-submit').addEventListener('click', async () => {
+      if (!selectedFile) {
+        App.toast('请先选择照片', 'error');
+        return;
+      }
+      if (!selectedCabinetId) {
+        App.toast('请选择柜子', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.textContent = '上传中...';
+      App.showLoading('AI 正在分析图片...');
+
+      try {
+        const desc = document.getElementById('input-desc').value.trim();
+        await API.addClothing(selectedFile, selectedCabinetId, desc, selectedSeason, selectedGender);
+        App.hideLoading();
+        App.toast('添加成功！', 'success');
+        setTimeout(() => window.history.back(), 1200);
+      } catch (err) {
+        App.hideLoading();
+        App.toast('上传失败：' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '添加到衣柜';
+      }
+    });
+  </script>
+</body>
+</html>
